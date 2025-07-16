@@ -1,18 +1,24 @@
 
-import { auth } from "@/lib/auth";
+import { db } from "@/lib/db";
+import { auth } from "@/lib/auth"
+import { rolesInHrm } from "drizzle/schema";
+import { eq } from "drizzle-orm";
 
-const mockRoles = [
-  { id: 1, role_name: "Admin", active_status: true },
-  { id: 2, role_name: "Manager", active_status: true },
-  { id: 3, role_name: "Guest", active_status: true }
-];
-
-export async function GET(): Promise<Response> {
+export async function GET() {
   const session = await auth();
 
   if(!session){
     return Response.json({error: 'Unauthorized Access!'}, {status:401})
   }
 
-  return Response.json(mockRoles);
+  const data = await db.select(
+    {
+      id: rolesInHrm.id,
+      role_name: rolesInHrm.role_name,
+      active_status: rolesInHrm.active_status
+    }
+  ).from(rolesInHrm)
+  .where(eq(rolesInHrm.active_status, true));
+  
+  return Response.json(data);
 }
